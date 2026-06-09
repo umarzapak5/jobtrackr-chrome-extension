@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobTrackr — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="../lib/lucide.min.js"></script>
+  <!-- PDF.js & Mammoth.js for resume parsing (local copies — MV3 blocks CDN scripts) -->
+  <script src="../lib/pdf.min.js"></script>
+  <script src="../lib/mammoth.browser.min.js"></script>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <!-- Top Nav -->
+  <nav class="nav">
+    <div class="nav-brand">
+      <div class="nav-logo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <span class="nav-title">JobTrackr</span>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="applications">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        Applications
+      </button>
+      <button class="nav-tab" data-tab="resume">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Resume
+      </button>
+      <button class="nav-tab" data-tab="analytics">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Analytics
+      </button>
+      <button class="nav-tab" data-tab="settings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.93 18.07l-1.41 1.41M20 12h-2M6 12H4M19.07 19.07l-1.41-1.41M5.93 5.93L4.52 4.52M12 20v-2M12 6V4"/>
+        </svg>
+        Settings
+      </button>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-secondary" id="importBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Import
+      </button>
+      <button class="btn-secondary" id="exportBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Export CSV
+      </button>
+      <button class="btn-secondary" id="exportJsonBtn" title="Full backup (preserves history, job descriptions, settings, resume)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Backup JSON
+      </button>
+      <button class="btn-primary" id="addAppBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Application
+      </button>
+      <input type="file" id="importFile" accept=".csv,.json,application/json" style="display:none">
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- ── Applications Tab ─────────────────────────────────────────────── -->
+    <div class="tab-content active" id="tab-applications" style="display:block">
+      <!-- Filters & View Toggle -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-wrapper">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="dashSearch" class="search-input" placeholder="Search company or title…">
+          </div>
+          <select id="filterStatus" class="filter-select">
+            <option value="">All Statuses</option>
+            <option value="Applied">Applied</option>
+            <option value="Phone Screen">Phone Screen</option>
+            <option value="Technical">Technical</option>
+            <option value="Final Round">Final Round</option>
+            <option value="Offer">Offer</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Ghosted">Ghosted</option>
+            <option value="Withdrawn">Withdrawn</option>
+          </select>
+          <select id="filterPlatform" class="filter-select">
+            <option value="">All Platforms</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="indeed">Indeed</option>
+            <option value="greenhouse">Greenhouse</option>
+            <option value="lever">Lever</option>
+            <option value="workday">Workday</option>
+            <option value="glassdoor">Glassdoor</option>
+            <option value="ziprecruiter">ZipRecruiter</option>
+            <option value="dice">Dice</option>
+            <option value="wellfound">Wellfound</option>
+            <option value="other">Other</option>
+          </select>
+          <select id="filterDate" class="filter-select">
+            <option value="">All Time</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;margin-left:8px;user-select:none">
+            <input type="checkbox" id="filterArchived" style="cursor:pointer">
+            Archived Workspace
+          </label>
+        </div>
+        <div class="toolbar-right">
+          <div class="view-toggle">
+            <button class="view-btn active" id="viewKanban" title="Kanban view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="5" height="18"/><rect x="10" y="3" width="5" height="18"/><rect x="17" y="3" width="4" height="18"/>
+              </svg>
+            </button>
+            <button class="view-btn" id="viewTable" title="Table view">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kanban Board -->
+      <div class="kanban-board" id="kanbanBoard"></div>
+
+      <!-- Table View -->
+      <div class="table-view" id="tableView" style="display:none">
+        <div class="table-wrapper">
+          <table class="app-table">
+            <thead>
+              <tr>
+                <th class="sortable" data-col="company">Company <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-col="jobTitle">Job Title <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-col="platform">Platform <span class="sort-icon">↕</span></th>
+                <th>Location</th>
+                <th class="sortable" data-col="dateApplied">Date Applied <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-col="status">Status <span class="sort-icon">↕</span></th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Resume Tab ───────────────────────────────────────────────────── -->
+    <div class="tab-content" id="tab-resume" style="display:none">
+      <!-- Upload State -->
+      <div id="resumeUploadState">
+        <div class="resume-upload-area" id="resumeUploadArea">
+          <div class="upload-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <h3>Upload Your Resume</h3>
+          <p>Drag & drop or click to upload a PDF or DOCX file</p>
+          <p class="upload-note">Parsed entirely in your browser — nothing is sent to any server.</p>
+          <button class="btn-primary" id="resumePickFile">Choose File</button>
+          <input type="file" id="resumeFileInput" accept=".pdf,.docx" style="display:none">
+        </div>
+        <div id="resumeParseError" class="parse-error" style="display:none"></div>
+        <div id="resumeParseLoading" class="parse-loading" style="display:none">
+          <div class="spinner"></div>
+          <span>Parsing resume…</span>
+        </div>
+      </div>
+
+      <!-- Existing Resume Banner -->
+      <div id="resumeExistingBanner" class="existing-banner" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        A resume is already saved. Saving this will replace it.
+      </div>
+
+      <!-- Review & Edit Form -->
+      <div id="resumeEditState" style="display:none">
+        <div class="resume-form-wrapper">
+          <!-- Personal Info -->
+          <div class="resume-section">
+            <h3 class="resume-section-title">Personal Info</h3>
+            <div class="resume-grid-2">
+              <div class="form-group"><label>First Name</label><input type="text" id="rFirstName"></div>
+              <div class="form-group"><label>Last Name</label><input type="text" id="rLastName"></div>
+              <div class="form-group"><label>Email</label><input type="email" id="rEmail"></div>
+              <div class="form-group"><label>Phone</label><input type="tel" id="rPhone"></div>
+              <div class="form-group"><label>LinkedIn URL</label><input type="url" id="rLinkedin"></div>
+              <div class="form-group"><label>GitHub URL</label><input type="url" id="rGithub"></div>
+              <div class="form-group"><label>Portfolio URL</label><input type="url" id="rPortfolio"></div>
+              <div class="form-group"><label>Current Title</label><input type="text" id="rCurrentTitle"></div>
+            </div>
+            <div class="resume-grid-4">
+              <div class="form-group"><label>City</label><input type="text" id="rCity"></div>
+              <div class="form-group"><label>State</label><input type="text" id="rState"></div>
+              <div class="form-group"><label>ZIP</label><input type="text" id="rZip"></div>
+              <div class="form-group"><label>Country</label><input type="text" id="rCountry"></div>
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div class="resume-section">
+            <h3 class="resume-section-title">Professional Summary</h3>
+            <textarea id="rSummary" rows="4" class="full-width-textarea"></textarea>
+          </div>
+
+          <!-- Skills -->
+          <div class="resume-section">
+            <h3 class="resume-section-title">Skills</h3>
+            <div class="skills-tags" id="skillsTags"></div>
+            <div class="skill-add-row">
+              <input type="text" id="skillAddInput" placeholder="Add a skill and press Enter…">
+            </div>
+          </div>
+
+          <!-- Experience -->
+          <div class="resume-section">
+            <h3 class="resume-section-title">Work Experience</h3>
+            <div id="experienceList"></div>
+            <button class="btn-add-entry" id="addExpBtn">+ Add Experience</button>
+          </div>
+
+          <!-- Education -->
+          <div class="resume-section">
+            <h3 class="resume-section-title">Education</h3>
+            <div id="educationList"></div>
+            <button class="btn-add-entry" id="addEduBtn">+ Add Education</button>
+          </div>
+
+          <!-- Certifications -->
+          <div class="resume-section">
+            <h3 class="resume-section-title">Certifications</h3>
+            <div id="certList"></div>
+            <button class="btn-add-entry" id="addCertBtn">+ Add Certification</button>
+          </div>
+
+          <!-- Save -->
+          <div class="resume-save-row">
+            <button class="btn-secondary" id="resumeCancelBtn">Cancel</button>
+            <button class="btn-primary large" id="resumeSaveBtn">Save Resume</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saved Summary View -->
+      <div id="resumeSavedState" style="display:none">
+        <div class="resume-saved-card">
+          <div class="resume-saved-header">
+            <div>
+              <h2 id="savedName">—</h2>
+              <p id="savedTitle" class="saved-subtitle">—</p>
+            </div>
+            <button class="btn-secondary" id="editResumeBtn">Edit Resume</button>
+          </div>
+          <div class="resume-saved-details" id="savedDetails"></div>
+          <div class="resume-saved-skills" id="savedSkills"></div>
+          <p class="saved-updated" id="savedUpdated"></p>
+        </div>
+        <button class="btn-outline" id="uploadNewResumeBtn" style="margin-top:16px">Upload New Resume</button>
+      </div>
+    </div>
+
+    <!-- ── Analytics Tab ───────────────────────────────────────────────── -->
+    <div class="tab-content" id="tab-analytics" style="display:none">
+      <div class="analytics-wrapper">
+        <div class="analytics-cards" id="analyticsCards"></div>
+        <div class="analytics-section">
+          <h4>Pipeline by status</h4>
+          <div id="analyticsFunnel" class="analytics-funnel"></div>
+        </div>
+        <div class="analytics-section">
+          <h4>Applications per week (last 8 weeks)</h4>
+          <div id="analyticsWeekly" class="analytics-weekly"></div>
+        </div>
+
+        <!-- Salary Insights & Negotiation -->
+        <div class="analytics-section salary-insights-section">
+          <h4>Salary & Compensation Insights</h4>
+          <div class="salary-metrics-grid">
+            <div class="salary-metric-card">
+              <span class="salary-metric-label">Min Target Salary</span>
+              <span class="salary-metric-value" id="salaryMinVal">—</span>
+            </div>
+            <div class="salary-metric-card">
+              <span class="salary-metric-label">Average Target Salary</span>
+              <span class="salary-metric-value" id="salaryAvgVal">—</span>
+            </div>
+            <div class="salary-metric-card">
+              <span class="salary-metric-label">Max Target Salary</span>
+              <span class="salary-metric-value" id="salaryMaxVal">—</span>
+            </div>
+          </div>
+          
+          <div class="negotiation-assistant">
+            <div class="nego-header">
+              <h5>Offer Analysis & Negotiation Helper</h5>
+              <p>Compare received offers against job listings and generate negotiation scripts.</p>
+            </div>
+            <div class="nego-body">
+              <div class="nego-form">
+                <div class="form-group" style="margin-bottom:12px">
+                  <label>Select Application</label>
+                  <select id="negoAppSelect" class="filter-select" style="width:100%;font-size:13px;padding:8px">
+                    <option value="">Choose an application…</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom:12px">
+                  <label>Base Salary Offered ($ / Year)</label>
+                  <input type="number" id="negoOfferSalary" class="search-input" style="width:100%;padding-left:12px" placeholder="e.g. 115000">
+                </div>
+                <div class="form-row" style="margin-bottom:12px">
+                  <div class="form-group">
+                    <label>Sign-on Bonus (Optional)</label>
+                    <input type="number" id="negoOfferSignon" class="search-input" style="width:100%;padding-left:12px" placeholder="e.g. 10000">
+                  </div>
+                  <div class="form-group">
+                    <label>Equity (Optional)</label>
+                    <input type="text" id="negoOfferEquity" class="search-input" style="width:100%;padding-left:12px" placeholder="e.g. 5000 RSU">
+                  </div>
+                </div>
+                <button class="btn-primary" id="negoAnalyzeBtn" style="width:100%;justify-content:center;margin-top:8px">Analyze & Generate Counter</button>
+              </div>
+              <div class="nego-result" id="negoResultArea" style="display:none">
+                <div class="nego-result-summary" id="negoSummaryText">Analyzing...</div>
+                <div class="nego-script-wrapper">
+                  <div class="nego-script-header">
+                    <span>Negotiation Script Template</span>
+                    <button class="action-btn" id="negoCopyBtn">Copy</button>
+                  </div>
+                  <textarea id="negoScriptText" class="nego-textarea" readonly></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Settings Tab ─────────────────────────────────────────────────── -->
+    <div class="tab-content" id="tab-settings" style="display:none">
+      <div class="settings-wrapper">
+        <div class="settings-card">
+          <h3>Detection & Tracking</h3>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Auto-detect submitted applications</span>
+              <span class="setting-desc">Automatically track a job only after you submit an application (detects the confirmation page)</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="settingAutoDetect" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Show toast notifications</span>
+              <span class="setting-desc">Display in-page notifications when a job is detected</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="settingToast" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h3>Auto-Fill</h3>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Enable Auto-Fill button</span>
+              <span class="setting-desc">Show the Auto-Fill Form button on job application pages</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="settingAutofill" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h3>AI Resume Helper</h3>
+          <p class="setting-desc" style="margin:0 0 16px;color:var(--text-muted)">When you click "Create Custom Resume" on a job page, this prompt (with the job description inserted) is pre-filled into a new AI chat.</p>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Preferred AI</span>
+              <span class="setting-desc">Which AI to open when creating a custom resume</span>
+            </div>
+            <div class="ai-toggle-group" id="aiToggleGroup">
+              <button class="ai-toggle-btn active" data-ai="chatgpt">ChatGPT</button>
+              <button class="ai-toggle-btn" data-ai="gemini">Gemini</button>
+            </div>
+          </div>
+
+          <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+            <span class="setting-label">Prompt Template</span>
+            <span class="setting-desc">Use <code style="background:var(--bg-input,#1e293b);padding:1px 5px;border-radius:4px;font-size:11px">[JOB_DESCRIPTION]</code> as a placeholder — it will be replaced with the actual job description.</span>
+            <textarea id="settingAiPrompt" rows="9" style="width:100%;resize:vertical;background:var(--bg-input,#1e293b);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);font-size:12px;font-family:inherit;padding:10px;line-height:1.5;outline:none;box-sizing:border-box"></textarea>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button class="btn-secondary" id="saveAiSettingsBtn">Save</button>
+              <button class="btn-outline" id="resetAiPromptBtn">Reset to Default</button>
+              <span id="aiSaveMsg" style="display:none;color:var(--success);font-size:13px">Saved!</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>EEO & Work Authorization</h3>
+          <p class="setting-desc" style="margin:0 0 16px;color:var(--text-muted)">These answers are auto-filled on EEO / diversity questionnaires on job boards.</p>
+
+          <div class="setting-row setting-row--select">
+            <label class="setting-label" for="settingGender">Gender</label>
+            <select id="settingGender" class="setting-select">
+              <option>Male</option>
+              <option>Female</option>
+              <option>Non-binary / non-conforming</option>
+              <option>Prefer not to say</option>
+            </select>
+          </div>
+
+          <div class="setting-row setting-row--select">
+            <label class="setting-label" for="settingVeteran">Veteran Status</label>
+            <select id="settingVeteran" class="setting-select">
+              <option>I am not a protected veteran</option>
+              <option>I am a protected veteran</option>
+              <option>I am a disabled veteran</option>
+              <option>Prefer not to say</option>
+            </select>
+          </div>
+
+          <div class="setting-row setting-row--select">
+            <label class="setting-label" for="settingDisability">Disability Status</label>
+            <select id="settingDisability" class="setting-select">
+              <option>No, I do not have a disability</option>
+              <option>Yes, I have a disability</option>
+              <option>Prefer not to say</option>
+            </select>
+          </div>
+
+          <div class="setting-row setting-row--select">
+            <label class="setting-label" for="settingHispanic">Hispanic / Latino</label>
+            <select id="settingHispanic" class="setting-select">
+              <option>No, not Hispanic or Latino</option>
+              <option>Yes, Hispanic or Latino</option>
+              <option>Prefer not to say</option>
+            </select>
+          </div>
+
+          <div class="setting-row setting-row--select">
+            <label class="setting-label" for="settingEthnicity">Race / Ethnicity</label>
+            <select id="settingEthnicity" class="setting-select">
+              <option>Asian (Not Hispanic or Latino)</option>
+              <option>White (Not Hispanic or Latino)</option>
+              <option>Black or African American (Not Hispanic or Latino)</option>
+              <option>Hispanic or Latino</option>
+              <option>American Indian or Alaska Native</option>
+              <option>Native Hawaiian or Pacific Islander</option>
+              <option>Two or More Races</option>
+              <option>Prefer not to say</option>
+            </select>
+          </div>
+
+          <div class="setting-row setting-row--select">
+            <label class="setting-label" for="settingWorkAuth">Work Authorization</label>
+            <select id="settingWorkAuth" class="setting-select">
+              <option>Green Card / Permanent Resident</option>
+              <option>US Citizen</option>
+              <option>H-1B Visa</option>
+              <option>TN Visa</option>
+              <option>OPT / STEM OPT</option>
+              <option>Other Visa</option>
+              <option>Not authorized to work in US</option>
+            </select>
+          </div>
+
+          <div class="setting-row setting-row--select">
+            <label class="setting-label" for="settingSponsorship">Require Sponsorship</label>
+            <select id="settingSponsorship" class="setting-select">
+              <option>No</option>
+              <option>Yes</option>
+              <option>Maybe in the future</option>
+            </select>
+          </div>
+
+          <div class="setting-row setting-row--select">
+            <label class="setting-label" for="settingCitizenship">Citizenship Country</label>
+            <select id="settingCitizenship" class="setting-select">
+              <option>United States</option>
+              <option>Pakistan</option>
+              <option>India</option>
+              <option>Canada</option>
+              <option>United Kingdom</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <button class="btn-secondary" id="saveEeoBtn" style="margin-top:8px">Save EEO Settings</button>
+          <span id="eeoSaveMsg" style="display:none;margin-left:10px;color:var(--success);font-size:13px">Saved!</span>
+        </div>
+
+        <div class="settings-card danger-card">
+          <h3>Data Management</h3>
+          <div class="storage-info" id="storageInfo">
+            <div class="storage-bar">
+              <div class="storage-fill" id="storageFill" style="width:0%"></div>
+            </div>
+            <span id="storageLabel">Calculating…</span>
+          </div>
+          <button class="btn-danger" id="clearAllBtn">Clear All Applications</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Application Detail Modal ─────────────────────────────────────── -->
+  <div class="modal-overlay" id="detailModal" style="display:none">
+    <div class="modal-large">
+      <div class="modal-header">
+        <div class="detail-header-fields">
+          <input type="text" id="detailTitle"   class="detail-title-input"   placeholder="Job Title">
+          <input type="text" id="detailCompany" class="detail-company-input" placeholder="Company name">
+        </div>
+        <button class="modal-close" id="detailClose">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body-flex">
+        <div class="detail-left">
+          <div class="detail-meta" id="detailMeta"></div>
+          <div class="detail-section">
+            <h4>Status</h4>
+            <select id="detailStatusSelect" class="detail-select"></select>
+          </div>
+          <div class="detail-section">
+            <h4>Notes</h4>
+            <textarea id="detailNotes" rows="4" placeholder="Add notes…"></textarea>
+          </div>
+          <div class="detail-section">
+            <h4>Status History</h4>
+            <div id="detailHistory" class="history-timeline"></div>
+          </div>
+          <div class="detail-section outreach-generator-card">
+            <h4>Outreach Templates</h4>
+            <div class="outreach-btn-group" style="display:flex;gap:4px;margin-bottom:8px">
+              <button class="action-btn" id="outreachFollowupBtn" style="flex:1;font-size:11px">Follow-up</button>
+              <button class="action-btn" id="outreachThankyouBtn" style="flex:1;font-size:11px">Thank You</button>
+              <button class="action-btn" id="outreachConnectBtn" style="flex:1.2;font-size:11px;white-space:nowrap">LinkedIn Connection</button>
+            </div>
+            <div class="outreach-result-box" id="outreachResultBox" style="display:none;margin-top:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <span style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-muted)">Draft Template</span>
+                <button class="action-btn" id="outreachCopyBtn" style="padding:2px 6px;font-size:10px">Copy</button>
+              </div>
+              <textarea id="outreachText" class="detail-select" style="font-size:11px;height:120px;resize:none;font-family:inherit;line-height:1.5" readonly></textarea>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <button class="btn-secondary" id="detailSave">Save Changes</button>
+            <button class="btn-secondary" id="detailArchive">Archive</button>
+            <button class="btn-danger-sm" id="detailDelete">Delete</button>
+          </div>
+        </div>
+        <div class="detail-right">
+          <div id="detailSkillGap" class="skill-gap" style="display:none">
+            <h4>Resume Match</h4>
+            <div class="skill-gap-score"><span id="skillGapPct">—</span> keyword match</div>
+            <div class="skill-gap-group">
+              <div class="skill-gap-label skill-gap-label--matched">✓ On your resume &amp; in this JD</div>
+              <div id="skillGapMatched" class="skill-gap-chips"></div>
+            </div>
+            <div class="skill-gap-group">
+              <div class="skill-gap-label skill-gap-label--missing">△ In this JD, missing from resume</div>
+              <div id="skillGapMissing" class="skill-gap-chips"></div>
+            </div>
+          </div>
+          <div id="detailPrepSheet" style="display:none;margin-top:14px;margin-bottom:14px">
+            <button class="btn-primary" id="prepOpenAiBtn" style="width:100%;justify-content:center;padding:10px;font-size:13px;display:flex;align-items:center;gap:6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              Prepare for Interview with AI
+            </button>
+          </div>
+          <h4>Job Description</h4>
+          <div id="detailJD" class="jd-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../storage/shared.js"></script>
+  <script src="../storage/db.js"></script>
+  <script src="../utils/helpers.js"></script>
+  <script src="../resume/resume-parser.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

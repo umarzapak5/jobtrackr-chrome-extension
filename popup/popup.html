@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobTrackr</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="../lib/lucide.min.js"></script>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <span class="logo-text">JobTrackr</span>
+      </div>
+      <div class="header-actions">
+        <button class="header-icon-btn" id="addManual" title="Add Manual Entry">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <button class="header-icon-btn" id="createCustomResume" title="Custom Resume (Extract Job & Open AI Chat)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </button>
+        <button class="header-icon-btn" id="toggleRejected" title="Show Rejected Applications (Currently Hidden)" style="position: relative">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="toggleRejectedIcon">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+          <span class="rejected-badge" id="rejectedCountBadge" style="display: none">0</span>
+        </button>
+        <button class="btn-dashboard" id="openDashboard" title="Open Full Dashboard">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          Dashboard
+        </button>
+      </div>
+    </header>
+
+    <!-- Storage Warning -->
+    <div class="storage-warning" id="storageWarning" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span id="storageWarningText">Storage is almost full</span>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-value" id="statTotal">0</span>
+        <span class="stat-label">Total</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-value" id="statWeek">0</span>
+        <span class="stat-label">This Week</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-value" id="statInterviews">0</span>
+        <span class="stat-label">Interviews</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-value stat-offer" id="statOffers">0</span>
+        <span class="stat-label">Offers</span>
+      </div>
+    </div>
+
+    <!-- ATS Match Panel -->
+    <div class="ats-match-panel" id="atsMatchPanel" style="display:none">
+      <div class="ats-match-header" id="atsMatchTrigger" title="Click to view skills matching detail">
+        <div class="ats-match-title">
+          <svg class="ats-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+          </svg>
+          <span>ATS Resume Match</span>
+        </div>
+        <div class="ats-score-badge" id="atsScoreValue">0%</div>
+      </div>
+      <div class="ats-match-details" id="atsMatchDetails" style="display:none">
+        <div class="ats-stats" id="atsStatsText">0 matched | 0 missing</div>
+        <div class="ats-section-title">Matched Skills</div>
+        <div class="ats-chips matched" id="atsMatchedChips"></div>
+        <div class="ats-section-title">Missing Keywords</div>
+        <div class="ats-chips missing" id="atsMissingChips"></div>
+        <div class="ats-actions">
+          <button class="btn-optimize" id="atsOptimizeBtn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            Optimize Resume for Job
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-wrapper">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search company or job title...">
+    </div>
+
+    <!-- Application List -->
+    <div class="app-list" id="appList">
+      <div class="empty-state" id="emptyState">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#475569">
+          <path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+          <path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/>
+        </svg>
+        <p>No applications yet.<br>Browse job listings to start tracking!</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Manual Entry Modal -->
+  <div class="modal-overlay" id="modalOverlay" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Application</h3>
+        <button class="modal-close" id="modalClose">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Job Title *</label>
+          <input type="text" id="mJobTitle" placeholder="e.g. Senior Software Engineer">
+        </div>
+        <div class="form-group">
+          <label>Company *</label>
+          <input type="text" id="mCompany" placeholder="e.g. Acme Corp">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Platform</label>
+            <select id="mPlatform">
+              <option value="other">Other</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="indeed">Indeed</option>
+              <option value="greenhouse">Greenhouse</option>
+              <option value="lever">Lever</option>
+              <option value="workday">Workday</option>
+              <option value="glassdoor">Glassdoor</option>
+              <option value="ziprecruiter">ZipRecruiter</option>
+              <option value="dice">Dice</option>
+              <option value="wellfound">Wellfound</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="mStatus">
+              <option value="Applied" selected>Applied</option>
+              <option value="Phone Screen">Phone Screen</option>
+              <option value="Technical">Technical</option>
+              <option value="Final Round">Final Round</option>
+              <option value="Offer">Offer</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Ghosted">Ghosted</option>
+              <option value="Withdrawn">Withdrawn</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Job URL</label>
+          <input type="url" id="mUrl" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="mLocation" placeholder="e.g. Remote / New York, NY">
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="mNotes" placeholder="Any notes about this application..." rows="3"></textarea>
+        </div>
+        <div id="modalError" class="form-error" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="modalCancel">Cancel</button>
+        <button class="btn-save" id="modalSave">Save Application</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../storage/shared.js"></script>
+  <script src="../storage/db.js"></script>
+  <script src="../utils/helpers.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
