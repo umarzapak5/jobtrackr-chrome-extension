@@ -4,6 +4,8 @@ JobTrackr is a Manifest V3 Chrome Extension designed to automate the job applica
 
 With JobTrackr, you can automatically capture submitted applications, parse resumes, auto-fill job application forms, generate tailored AI prompts for interviews/resume optimization, and manage your pipeline through an interactive dashboard.
 
+![JobTrackr Kanban Board Dashboard](screenshots/dashboard_mockup.png)
+
 ---
 
 ## 🚀 Key Features
@@ -117,6 +119,8 @@ From the dashboard, you can open AI helpers:
 *   JobTrackr bundles your resume data and the target job description.
 *   It stores a transient prompt in `chrome.storage.local` under `jobtrackr_pending_ai` and launches ChatGPT or Gemini.
 *   `content/ai-filler.js` intercepts the loaded AI chatbot window, locates the main text entry area, pastes the prompt template, and highlights the area.
+
+![JobTrackr Details Modal with AI Assistant](screenshots/modal_mockup.png)
 
 ### 4. Background Workers & Alerts
 *   Alarms run daily to check for applications stuck in "Applied" state for longer than the threshold in your settings (default: 7 days).
