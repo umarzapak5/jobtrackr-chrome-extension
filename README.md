@@ -8,11 +8,15 @@ With JobTrackr, you can automatically capture submitted applications, parse resu
 
 ## 🚀 Key Features
 
-*   **⚡ Automatic Submission Detection:** Content scripts automatically identify application submissions on LinkedIn and other popular job portals. Once a submission is confirmed (Phase 2), it instantly logs or promotes the application status to **Applied**.
+*   **⚡ Automatic Submission Detection:** Content scripts automatically identify application submissions on LinkedIn and other popular job portals. Once a submission is confirmed, it instantly logs or promotes the application status to **Applied**.
 *   **📄 Client-Side Resume Parsing:** Upload **PDF** (via `pdf.js`) or **DOCX** (via `mammoth.js`) resumes directly. The extension parses skills, work experience, and personal details on the fly.
-*   **📋 Form Auto-Filler:** Intuitively detects job form fields (Greenhouse, Lever, etc.) and offers a floating **"Auto-Fill Form"** button that injects your parsed resume details and highlights matching inputs in green.
-*   **🤖 AI Resume & Prompt Helper:** Integrates with ChatGPT and Gemini. Pre-populates prompts with job details and templates to customize your resume or prepare for interviews with a single click.
-*   **📊 Kanban & Table Dashboard:** Manage your entire pipeline in a full-screen dashboard equipped with a drag-and-drop Kanban board, fuzzy search, CSV import/export, and visual analytics.
+*   **📋 Form Auto-Filler:** Intuitively detects job form fields (Greenhouse, Lever, etc.) and offers a floating **"Auto-Fill Form"** button that injects your parsed resume details and highlights matching inputs.
+*   **🤖 AI Resume & Prompt Helper:** Integrates with ChatGPT and Gemini to customize resumes, prepare for interviews, or write target cover letters with a single click.
+*   **✉️ AI Outreach Template Generator:** Located in the details modal. Generates tailored, copyable follow-up, thank you, and LinkedIn connection scripts using candidate information and job metadata.
+*   **🎯 AI Interview Prep Action:** Instantly compiles a structured technical and behavioral preparation prompt from the job description and your resume, launching it straight into ChatGPT or Gemini.
+*   **📁 Archived Applications Workspace:** Allows moving closed or historic applications to a separate workspace via an "Archive" detail action, hiding them from your active pipeline while retaining them for statistics and salary metrics.
+*   **🚫 Collapsible Rejected Applications with Count Badge:** A toggle button with an active badge counter dynamically shows or hides rejected applications on the dashboard and popup, keeping your active search pipeline focused.
+*   **📊 Kanban & Table Dashboard:** Manage your entire pipeline in a full-screen dashboard equipped with a drag-and-drop Kanban board, fuzzy search, CSV/JSON import/export, and visual analytics.
 *   **⏰ Automatic Follow-Up Alarms:** Background workers automatically monitor aging applications (default: 7 days) and push Chrome system notifications to remind you to follow up.
 
 ---
